@@ -2,6 +2,15 @@ import requests,json
 from typing import List
 
 def get_translation(text:List[str], app_code:str)->List[str]:
+    """
+    暂时使用第三方封装的google translate接口，1000次/10￥
+    如需替换翻译方式可以重写该函数
+    example
+    text:List[str] = {
+        "你好",
+        "欢迎"
+    }
+    """
     url = "http://googlertanslate.api.bdymkt.com/translates"
     appcode = app_code
     headers = {

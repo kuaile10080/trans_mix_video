@@ -83,7 +83,7 @@ def process_vtt_to_ass(vtt_path:str):
         vtt_text = fp.read()
         vtt_content = decode_vtt(vtt_text)
     logging.info("Start getting translation...")
-    vtt_content["translated_texts"] = get_translation(vtt_content["texts"], APP_CODE) #暂时使用第三方封装的google translate接口，1000次/10￥
+    vtt_content["translated_texts"] = get_translation(vtt_content["texts"], APP_CODE)
     logging.info("Get translation success!")
     ass_content_head = ASS_FILE_HEAD
     for i in range(len(vtt_content["translated_texts"])):
