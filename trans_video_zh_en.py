@@ -78,12 +78,12 @@ def time_format(hh_mm_ss_cs:str)->str:
     cs = round(dt.microsecond / 10000)
     return f"{dt.hour}:{dt.minute:02}:{dt.second:02}.{cs:02}"
 
-def process_vtt_to_ass(config:dict):
-    with open(config["vtt_path"], "r", encoding='utf-8')as fp:
+def process_vtt_to_ass(vtt_path:str):
+    with open(vtt_path, "r", encoding='utf-8')as fp:
         vtt_text = fp.read()
         vtt_content = decode_vtt(vtt_text)
     logging.info("Start getting translation...")
-    vtt_content["translated_texts"] = get_translation(vtt_content["texts"], APP_CODE) #使用第三方封装的google translate接口，1000次/10￥
+    vtt_content["translated_texts"] = get_translation(vtt_content["texts"], APP_CODE) #暂时使用第三方封装的google translate接口，1000次/10￥
     logging.info("Get translation success!")
     ass_content_head = ASS_FILE_HEAD
     for i in range(len(vtt_content["translated_texts"])):
@@ -97,26 +97,29 @@ def process_vtt_to_ass(config:dict):
 
 def process():
     config = read_config(os.path.join(THIS_PATH, "config.json"))
-    ass = process_vtt_to_ass(config)
     vtt_path:str = config["vtt_path"]
     ass_path:str = vtt_path.replace(".vtt",".ass")
+    ass = process_vtt_to_ass(vtt_path)
     with open(ass_path, "w", encoding='utf-8')as fp:
         fp.write(ass)
-    video_path:str = os.path.realpath(config["video_path"])
-    video_out_path = os.path.realpath(os.path.join(os.path.dirname(video_path), "[EN]" + os.path.basename(video_path)))
-    ffmpeg_exe_path = os.path.realpath(os.path.join(THIS_PATH, os.path.join(FFMPEG_PATH, "bin/ffmpeg.exe")))
-    cmd = [
-        ffmpeg_exe_path,
-        "-i", video_path,
-        "-vf", f"ass={ass_path}",
-        "-c:v", config["encoder"],
-        "-crf", config["quality_crf"],
-        "-preset", "slow",
-        "-c:a", "copy",
-        video_out_path
-    ]
-    logging.debug(cmd)
-    subprocess.run(cmd, check=True)
+    logging.info(f"Write ass file to {ass_path}")
+    if config["merge"] == True:
+        logging.info(f"Merging...")
+        video_path:str = os.path.realpath(config["video_path"])
+        video_out_path = os.path.realpath(os.path.join(os.path.dirname(video_path), "[EN]" + os.path.basename(video_path)))
+        ffmpeg_exe_path = os.path.realpath(os.path.join(THIS_PATH, os.path.join(FFMPEG_PATH, "bin/ffmpeg.exe")))
+        cmd = [
+            ffmpeg_exe_path,
+            "-i", video_path,
+            "-vf", f"ass={ass_path}",
+            "-c:v", config["encoder"],
+            "-crf", config["quality_crf"],
+            "-preset", "slow",
+            "-c:a", "copy",
+            video_out_path
+        ]
+        logging.info(cmd)
+        subprocess.run(cmd, check=True)
 
 if __name__ == "__main__":
     process()
