@@ -1,0 +1,6 @@
+{
+    "video_path": "./files/Meta28 - MI355X MHA FP32 ASM Kernel Design sharing-20251021_153447-会议记录.mp4",
+    "vtt_path": "./files/Meta28 - MI355X MHA FP32 ASM Kernel Design sharing.vtt",
+    "encoder": "libx264",
+    "quality_crf": "23"
+}
