@@ -37,14 +37,17 @@ Example configuration:
    pip install requests
    ```
 
-2. **Create a `.env` file** in the project root directory and add your API key:
+2. **Download ffmpeg**, preferably the [Windows 64-bit GPL version](https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip). Do not choose the shared build. Then, set the FFMPEG_PATH variable in main.py to the path where FFmpeg is installed.
+
+
+3. **Create a `.env` file** in the project root directory and add your API key:
    ```
    APP_CODE=your_appcode_here
    ```
 
-3. **Prepare your `config.json`** file with the required fields (see Configuration section).
+4. **Prepare your `config.json`** file with the required fields (see Configuration section).
 
-4. **Run the program**:
+5. **Run the program**:
    ```bash
    python main.py
    ```
