@@ -1,4 +1,4 @@
-import json, os, subprocess
+import json, os, subprocess, re
 from lib.get_translation import get_translation
 from datetime import datetime
 
@@ -43,47 +43,41 @@ def read_config(path_to_config:str)->dict:
     logging.info("Read config success!")
     return config
 
-def decode_vtt(vtt:str)->str:
+def decode_vtt(vtt:str)->dict:
     content = {
         "starts":[],
         "ends":[],
         "speakers":[],
         "texts": []
     }
-    start, end, speaker, text = "", "", "", ""
-    for line in vtt.split("\n"):
-        if " --> " in line:
-            start, end = line.split(" --> ")
-            start = start.strip()
-            end = end.strip()
-        
-        if line.startswith("<v"):
-            speaker = line[3:line.find('>')]
-            text += line[line.find('>')+1: line.find("</v>")]
-        
-        if line.endswith("</v>"):
-            if not line.startswith("<v"):
-                text += "\\N"
-                text += line[:line.find("</v>")]
-            content["starts"].append(start)
-            content["ends"].append(end)
-            content["speakers"].append(speaker)
-            content["texts"].append(text)
-            start, end, speaker, text = "", "", "", ""
-    logging.info("Decode vtt success!")
-    return content 
+    vtt_blocks = re.split(r'\r?\n\r?\n', vtt)
+    pattern = r"(\d+:\d+:\d+.\d+) --> (\d+:\d+:\d+.\d+)\s*(?:<v (.*?)>)?(.*?)(?:</v>)?$"
+    re_res = []
+    for block in vtt_blocks:
+        temp = re.search(pattern, block, re.DOTALL)
+        if temp:
+            re_res.append(temp)
+    for item in re_res:
+        content["starts"].append(item.group(1))
+        content["ends"].append(item.group(2))
+        content["speakers"].append(item.group(3) if item.group(3) else "")
+        content["texts"].append(item.group(4))
+    return content
 
 def time_format(hh_mm_ss_cs:str)->str:
     dt = datetime.strptime(hh_mm_ss_cs, "%H:%M:%S.%f")
     cs = round(dt.microsecond / 10000)
     return f"{dt.hour}:{dt.minute:02}:{dt.second:02}.{cs:02}"
 
-def process_vtt_to_ass(vtt_path:str):
+def process_vtt_to_ass(vtt_path:str, config:dict):
     with open(vtt_path, "r", encoding='utf-8')as fp:
         vtt_text = fp.read()
         vtt_content = decode_vtt(vtt_text)
     logging.info("Start getting translation...")
-    vtt_content["translated_texts"] = get_translation(vtt_content["texts"], APP_CODE)
+    if "src" in config and "dst" in config:
+        vtt_content["translated_texts"] = get_translation(vtt_content["texts"], APP_CODE, src = config["src"], dst = config["dst"])
+    else:
+        vtt_content["translated_texts"] = get_translation(vtt_content["texts"], APP_CODE)
     logging.info("Get translation success!")
     ass_content_head = ASS_FILE_HEAD
     for i in range(len(vtt_content["translated_texts"])):
@@ -91,7 +85,7 @@ def process_vtt_to_ass(vtt_path:str):
         end = vtt_content["ends"][i]
         speaker = vtt_content["speakers"][i]
         translated_text = vtt_content["translated_texts"][i]
-        line = f"Dialogue: 0,{time_format(start)},{time_format(end)},Default,{speaker.replace(",", " ")},0,0,0,,{translated_text}\n"
+        line = f"Dialogue: 0,{time_format(start)},{time_format(end)},Default,{speaker.replace(",", " ")},0,0,0,,{translated_text.replace("\n","\\N")}\n"
         ass_content_head += line
     return ass_content_head
 
@@ -99,14 +93,15 @@ def process():
     config = read_config(os.path.join(THIS_PATH, "config.json"))
     vtt_path:str = config["vtt_path"]
     ass_path:str = vtt_path.replace(".vtt",".ass")
-    ass = process_vtt_to_ass(vtt_path)
+    ass = process_vtt_to_ass(vtt_path, config)
     with open(ass_path, "w", encoding='utf-8')as fp:
         fp.write(ass)
     logging.info(f"Write ass file to {ass_path}")
     if config["merge"] == True:
         logging.info(f"Merging...")
         video_path:str = os.path.realpath(config["video_path"])
-        video_out_path = os.path.realpath(os.path.join(os.path.dirname(video_path), "[EN]" + os.path.basename(video_path)))
+        file_header = f"[{config['dst'].upper()}]" if 'dst' in config else "[EN]"
+        video_out_path = os.path.realpath(os.path.join(os.path.dirname(video_path), file_header + os.path.basename(video_path)))
         ffmpeg_exe_path = os.path.realpath(os.path.join(THIS_PATH, os.path.join(FFMPEG_PATH, "bin/ffmpeg.exe")))
         cmd = [
             ffmpeg_exe_path,

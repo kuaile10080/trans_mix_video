@@ -1,7 +1,9 @@
 {
-    "vtt_path": "./files/Meta28 - MI355X MHA FP32 ASM Kernel Design sharing.vtt",
+    "vtt_path": "./files/hipTraining Series 8 System access and prerequisites validation - Session 1-20251022_204414UTC-Meeting Recording-en-US.vtt",
     "merge": true,
-    "video_path": "./files/Meta28 - MI355X MHA FP32 ASM Kernel Design sharing-20251021_153447-会议记录.mp4",
+    "video_path": "./files/hipTraining Series 8 System access and prerequisites validation - Session 1-20251022_204414UTC-Meeting Recording.mp4",
     "encoder": "libx264",
-    "quality_crf": "23"
+    "quality_crf": "23",
+    "src": "en",
+    "dst": "zh"
 }

@@ -1,7 +1,7 @@
 import requests,json
 from typing import List
 
-def get_translation(text:List[str], app_code:str)->List[str]:
+def get_translation(text:List[str], app_code:str, src:str="zh", dst:str="en")->List[str]:
     """
     暂时使用第三方封装的google translate接口，1000次/10￥
     如需替换翻译方式可以重写该函数
@@ -19,8 +19,8 @@ def get_translation(text:List[str], app_code:str)->List[str]:
     }
     payload = {
         "texts": text,
-        "tls": ["en"],
-        "sl": "zh"
+        "tls": [dst],
+        "sl": src
     }
     response = requests.post(url, headers=headers, data=json.dumps(payload), verify=False)
 
@@ -32,4 +32,5 @@ def get_translation(text:List[str], app_code:str)->List[str]:
             raise Exception(f"解析翻译响应失败: {e}, 响应内容: {response.text}")
         return translated_texts
     else:
+        print(payload)
         raise Exception(f"请求失败，状态码: {response.status_code}，响应内容: {response.text}")
