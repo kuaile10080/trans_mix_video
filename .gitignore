@@ -3,3 +3,4 @@ lib/ffmpeg-master-latest-win64-gpl
 files/*
 **/__pycache__/
 *.pyc
+config.json

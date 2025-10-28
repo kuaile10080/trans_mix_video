@@ -115,6 +115,7 @@ def process():
         ]
         logging.info(cmd)
         subprocess.run(cmd, check=True)
+        logging.info(f"Success mix video to {video_out_path}")
 
 if __name__ == "__main__":
     process()
